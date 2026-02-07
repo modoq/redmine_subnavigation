@@ -72,11 +72,45 @@ document.addEventListener('DOMContentLoaded', function () {
     const links = sidebar.querySelectorAll('a.wiki-page-link');
     let activePageLink = null;
 
+    // 1. Try Exact Match
     for (let link of links) {
         const hrefPath = decodeURIComponent(link.getAttribute('href'));
         if (hrefPath === currentPath) {
             activePageLink = link;
             break;
+        }
+    }
+
+    // 2. Try Wiki Start Page Match (e.g. /projects/foo/wiki vs /projects/foo/wiki/Wiki)
+    if (!activePageLink) {
+        // Check if current path ends in /wiki
+        // If so, we might need to find the "Wiki" page link or the Project link if it acts as wiki root?
+        // Usually the "Wiki" tab links to /wiki, which redirects to /wiki/Wiki or similar.
+        // But the sidebar link probably points to /wiki/Wiki directly.
+
+        if (currentPath.endsWith('/wiki')) {
+            for (let link of links) {
+                const hrefPath = decodeURIComponent(link.getAttribute('href'));
+                // Check if href is /wiki/Wiki or /wiki/Insex etc.
+                // Best guess: The first page in the list is usually the start page if sorted? 
+                // Or check if href = currentPath + '/Wiki'
+                if (hrefPath === currentPath + '/Wiki' || hrefPath === currentPath + '/index') {
+                    activePageLink = link;
+                    break;
+                }
+            }
+        }
+
+        // 3. Reverse Check: Current path is /wiki/Wiki but link is /wiki (rare in sidebar but possible)
+        if (!activePageLink && currentPath.endsWith('/Wiki')) {
+            const basePath = currentPath.substring(0, currentPath.length - 5); // remove /Wiki
+            for (let link of links) {
+                const hrefPath = decodeURIComponent(link.getAttribute('href'));
+                if (hrefPath === basePath) {
+                    activePageLink = link;
+                    break;
+                }
+            }
         }
     }
 
@@ -97,6 +131,56 @@ document.addEventListener('DOMContentLoaded', function () {
             // Scroll to page link if needed
             if (!isClosed) {
                 setTimeout(() => activePageLink.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+            }
+        }
+    } else {
+        // Fallback: If no direct link match (e.g. Issues tab, Settings, etc.)
+        // highlight the Project Folder if we are inside a project
+        // path format: /projects/:identifier/...
+        const pathParts = currentPath.split('/');
+        const projectsIndex = pathParts.indexOf('projects');
+
+        if (projectsIndex !== -1 && pathParts.length > projectsIndex + 1) {
+            const projectIdentifier = pathParts[projectsIndex + 1];
+            // Check if we are in Wiki?
+            // If /projects/:id/wiki detected, we usually have a direct link match above.
+            // If NOT found above, maybe it's a new page or unlisted? 
+            // User says: "if wiki page open, only highlight wiki entry".
+            // Since we didn't find a wiki entry match above, maybe we shouldn't highlight project?
+            // BUT standard behavior: if in Wiki module, highlight Wiki parent?
+            // Let's check tab.
+
+            const isWiki = pathParts.includes('wiki');
+
+            if (!isWiki) {
+                // Find project link matching /projects/:identifier
+                // We look for links that END with /projects/:identifier or match exactly
+                // Note: smart_project_path might point to /activity or /issues
+                // So strict href match might fail if we are on /issues but link is /projects/:id (Overview)
+                // We need to match by Identifier or roughly.
+
+                const projectLinks = sidebar.querySelectorAll('a.wiki-page-link.type-project');
+                for (let link of projectLinks) {
+                    const href = link.getAttribute('href');
+                    // Check if href contains the identifier
+                    if (href && href.includes(`/projects/${projectIdentifier}`)) {
+                        link.classList.add('active');
+                        // Expand parents
+                        const currentLi = link.closest('li');
+                        if (currentLi) {
+                            let parent = currentLi;
+                            while (parent && parent !== sidebar) {
+                                if (parent.tagName === 'LI') {
+                                    parent.classList.add('expanded');
+                                    const ul = parent.querySelector('ul');
+                                    if (ul) ul.style.display = 'block';
+                                }
+                                parent = parent.parentElement;
+                            }
+                        }
+                        break; // Stop after finding the project
+                    }
+                }
             }
         }
     }

@@ -60,7 +60,8 @@ module RedmineSubnavigation
        # Project Link
        is_active = project == current_active_project
        # Using a class to style it distinctively?
-       html << link_to(project.name, project_path(project), class: "wiki-page-link type-project #{is_active ? 'project-active' : ''}")
+       # Use smart_project_path helper
+       html << link_to(project.name, smart_project_path(project), class: "wiki-page-link type-project #{is_active ? 'project-active' : ''}")
        
        # If this is the active project, render its Wiki Tree below (if it has a wiki)
        # UPDATE: User wants to see expand icon if wiki exists, even if not active.
@@ -193,6 +194,46 @@ module RedmineSubnavigation
         end
       end
       display_title
+    end
+
+    # Smart path tailored to user request:
+    # 1. Overview (standard)
+    # 2. Activity (if Overview not present/wanted - hard to detect, but we assume project_path handles redirects or we check permissions?)
+    #    Actually Redmine's project_path IS the overview. 
+    #    If the user has NO permission for overview (unlikely) or module is hidden...
+    # We will try to rely on Redmine's default. 
+    # But if we want to be explicit about Priority:
+    # If standard project_path results in 403 or 404, we can't know here.
+    # We will stick to project_path as primary. 
+    # However, if we want to support "Activity as fallback", we'd need to check if user can view overview.
+    # allowed_to?(:view_project, project) usually covers Overview.
+    
+    def smart_project_path(project)
+      # Check if user has permission to see the project (Overview)
+      if User.current.allowed_to?(:view_project, project)
+         return project_path(project)
+      end
+
+      # Fallbacks if Overview is technically accessible but "empty"? (Can't check easily)
+      # Or if user just lacks permission for Overview but has others? (Rare config)
+      
+      # 2. Activity
+      if project.module_enabled?(:activity) # Activity module always exists? It's a pseudo-module often.
+         return project_activity_path(project)
+      end
+      
+      # 3. Issues
+      if project.module_enabled?(:issue_tracking) && User.current.allowed_to?(:view_issues, project)
+         return project_issues_path(project)
+      end
+      
+      # 4. Wiki
+      if project.module_enabled?(:wiki) && User.current.allowed_to?(:view_wiki_pages, project)
+         return project_wiki_path(project)
+      end
+      
+      # Default
+      project_path(project)
     end
   end
 end

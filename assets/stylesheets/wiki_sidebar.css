@@ -13,6 +13,19 @@
     --subnav-folder: #666;
     --subnav-resizer-hover: #007bff;
     --subnav-z-index: 15;
+
+    /* New Variables for Theme Compatibility */
+    --subnav-toggle-icon: #aeaeae;
+    --subnav-toggle-icon-hover: #444;
+    --subnav-toggle-bg-closed: rgba(0, 0, 0, 0.4);
+    --subnav-toggle-icon-closed: #666;
+    /* FIXED: Dark color for light background */
+
+    --subnav-header-text: #666;
+    --subnav-header-hover-bg: #f0f0f0;
+
+    --subnav-highlight-color: rgba(255, 243, 205, 1);
+    --subnav-docked-width: 20px;
 }
 
 /* Dark Mode Support (Basic) */
@@ -27,6 +40,16 @@
         --subnav-active-text: #fff;
         --subnav-icon: #aaa;
         --subnav-folder: #bbb;
+
+        --subnav-toggle-icon: #888;
+        --subnav-toggle-icon-hover: #fff;
+        --subnav-toggle-bg-closed: rgba(255, 255, 255, 0.1);
+        --subnav-toggle-icon-closed: #eee;
+
+        --subnav-header-text: #aaa;
+        --subnav-header-hover-bg: #333;
+
+        --subnav-highlight-color: rgba(255, 215, 0, 0.3);
     }
 }
 
@@ -112,20 +135,38 @@ body.has-mini-wiki-sidebar.mini-sidebar-mode-wiki #wrapper {
 }
 
 /* Assign Grid Areas */
+
 body.has-mini-wiki-sidebar #top-menu {
     grid-area: top;
-    width: auto !important;
+    width: 100% !important;
+    /* Changed from auto to 100% */
+    max-width: 100vw;
     box-sizing: border-box;
+    overflow: hidden;
+    /* Prevent overflow */
 }
 
 body.has-mini-wiki-sidebar #header {
     grid-area: header;
-    width: auto;
+    width: 100% !important;
+    /* Changed from auto to 100% */
+    max-width: 100%;
+    /* Ensure it doesn't exceed grid area */
+    box-sizing: border-box;
+    overflow-x: clip;
+    /* Modern browsers */
+    overflow-y: visible;
+    /* Dropdowns need to be visible Y-wise? Actually Redmine tabs usually not dropdowns but maybe. Safe to clip X. */
 }
 
 body.has-mini-wiki-sidebar #main {
     grid-area: main;
-    width: auto !important;
+    width: 100% !important;
+    /* Changed from auto */
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: auto;
+    /* Allow internal scroll if table too wide, but don't break page */
 }
 
 body.has-mini-wiki-sidebar #footer {
@@ -159,18 +200,19 @@ body.has-mini-wiki-sidebar #footer {
     transition: none !important;
 }
 
-/* Collapsed State */
-/* Collapsed State */
+
+/* Collapsed State - DOCKED */
 #mini-wiki-sidebar.collapsed,
 body.mini-wiki-sidebar-closed #mini-wiki-sidebar {
-    width: 0 !important;
-    min-width: 0 !important;
+    width: var(--subnav-docked-width) !important;
+    min-width: var(--subnav-docked-width) !important;
     padding: 0 !important;
-    border-right: none !important;
+    border-right: 1px solid var(--subnav-border) !important;
     margin: 0 !important;
-    overflow: visible !important;
-    background-color: transparent;
-    /* Ensure no bg when closed */
+    overflow: hidden !important;
+    background-color: var(--subnav-bg) !important;
+    /* Ensure z-index is maintained */
+    z-index: var(--subnav-z-index);
 }
 
 /* Toggle Button */
@@ -193,7 +235,7 @@ body.mini-wiki-sidebar-closed #mini-wiki-sidebar ul {
 .mini-wiki-sidebar-toggle {
     cursor: pointer;
     font-size: 1.2rem;
-    color: #aeaeae;
+    color: var(--subnav-toggle-icon);
     background: transparent;
     border: none;
     padding: 4px 8px;
@@ -211,74 +253,66 @@ body.mini-wiki-sidebar-closed #mini-wiki-sidebar ul {
 /* When sidebar acts as a sibling overlapping */
 body:not(.mini-wiki-sidebar-closed) .mini-wiki-sidebar-toggle {
     position: absolute;
-    top: 0px;
-    right: 0px;
-    width: 18px;
-    height: 12px;
-    color: #999;
+    top: 5px;
+    right: 5px;
+    width: 24px;
+    height: 24px;
+    color: var(--subnav-icon);
 }
 
-/* When sidebar is closed, button needs to be positioned nicely */
+/* When sidebar is closed - DOCKED BUTTON */
 body.mini-wiki-sidebar-closed .mini-wiki-sidebar-toggle {
-    /* Since sidebar width is 0, we position relative to it */
-    position: absolute;
-    top: 10px;
-    right: auto;
-    left: 10px;
-    /* Push it out a bit */
+    position: absolute !important;
+    top: 10px !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%);
     width: 30px;
     height: 30px;
-    color: #f8f8f8;
-    background: rgba(0, 0, 0, 0.4);
-    border-radius: 3px;
+    color: var(--subnav-toggle-icon-closed);
+    background: transparent !important;
+    border-radius: 4px;
+    box-shadow: none !important;
 }
 
 /* Override styling for different modes */
 
-/* Wiki Mode: Toggle scrolls with content until top, then sticks (relies on sidebar sticky) */
+/* Wiki Mode: Toggle alignment */
 body.mini-wiki-sidebar-closed.mini-sidebar-mode-wiki .mini-wiki-sidebar-toggle {
+    /* Inherit the docked styling above */
     position: absolute !important;
-    /* Optional: Slight visual tweak if needed, user said "ganz links am rand" -> left: 0 is correct */
-    /* Update: User requested 15px right and narrower */
-    /* User requested specific tweaks */
-    position: absolute !important;
-    top: 0 !important;
-    left: 15px !important;
-    /* Kept due to context, user said "margin-left: -16px" on base? Let's assume user wants this override */
-    color: #999;
-    background: transparent !important;
-    border: none !important;
-    width: 20px !important;
-
-    /* User supplied: */
-    padding-right: 0px !important;
-    padding-top: 0px !important;
-    padding-bottom: 0px !important;
-    padding-left: 2px !important;
-    margin-left: -16px !important;
-    margin-top: 6px !important;
+    top: 10px !important;
+    left: 50% !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 /* Hover State */
 .mini-wiki-sidebar-toggle:hover {
-    color: #444;
+    color: var(--subnav-toggle-icon-hover);
 }
 
 body.mini-wiki-sidebar-closed .mini-wiki-sidebar-toggle:hover {
-    background: rgba(0, 0, 0, 0.6);
+    background: var(--subnav-toggle-bg-closed);
 }
+
 
 .mini-wiki-sidebar-toggle::before {
     content: '‹';
+    /* Arrow pointing left (Close) */
     font-size: 24px;
     font-weight: bold;
+    margin-left: 1rem;
 }
 
 body.mini-wiki-sidebar-closed .mini-wiki-sidebar-toggle::before {
     content: '☰';
-    font-size: 20px;
+    /* Hamburger (Open) - Standard Redmine style */
+    font-size: 18px;
+    /* Slightly smaller to fit 20px width */
     font-weight: normal;
-    margin-left: 18px;
+    margin-left: 1.3rem;
+    margin-bottom: 1.4rem;
 }
 
 /* Content Styling */
@@ -388,7 +422,7 @@ body.mini-wiki-sidebar-closed.mini-sidebar-mode-project_wiki #header {
 }
 
 a.wiki-header-link {
-    color: #666;
+    color: var(--subnav-header-text);
     font-size: 0.9rem;
     font-weight: normal;
     padding: 2px 4px 2px 18px;
@@ -424,8 +458,10 @@ a.wiki-header-link.wiki-header-h2::before {
 
 a.wiki-header-link.wiki-header-h3 {
     padding-left: 28px;
-    color: #777;
+    color: var(--subnav-header-text);
+    /* Simplification: Use same color or new var if needed */
     font-size: 0.9rem;
+    opacity: 0.9;
 }
 
 a.wiki-header-link.wiki-header-h3::before {
@@ -434,8 +470,9 @@ a.wiki-header-link.wiki-header-h3::before {
 
 a.wiki-header-link.wiki-header-h4 {
     padding-left: 36px;
-    color: #888;
+    color: var(--subnav-header-text);
     font-size: 0.9rem;
+    opacity: 0.8;
 }
 
 a.wiki-header-link.wiki-header-h4::before {
@@ -444,8 +481,9 @@ a.wiki-header-link.wiki-header-h4::before {
 
 a.wiki-header-link.wiki-header-h5 {
     padding-left: 44px;
-    color: #999;
+    color: var(--subnav-header-text);
     font-size: 0.9rem;
+    opacity: 0.7;
 }
 
 a.wiki-header-link.wiki-header-h5::before {
@@ -454,7 +492,7 @@ a.wiki-header-link.wiki-header-h5::before {
 
 a.wiki-header-link:hover {
     color: var(--subnav-resizer-hover);
-    background-color: #f0f0f0;
+    background-color: var(--subnav-header-hover-bg);
     border-radius: 4px;
 }
 
@@ -463,7 +501,7 @@ a.wiki-header-link::before {
     position: absolute;
     left: 4px;
     top: 2px;
-    color: #999;
+    color: var(--subnav-icon);
     font-weight: normal;
     font-size: 0.85em;
     line-height: 1.4;
@@ -560,19 +598,20 @@ a.wiki-header-link.active::before {
 /* Content Header Highlight Animation */
 @keyframes target-fade {
     0% {
-        background-color: rgba(255, 243, 205, 0);
+        background-color: transparent;
+        /* Use transparent instead of hardcoded alpha 0 */
     }
 
     10% {
-        background-color: rgba(255, 243, 205, 1);
+        background-color: var(--subnav-highlight-color);
         border-radius: 4px;
         padding-left: 5px;
         margin-left: -5px;
-        box-shadow: 0 0 0 5px rgba(255, 243, 205, 1);
+        box-shadow: 0 0 0 5px var(--subnav-highlight-color);
     }
 
     100% {
-        background-color: rgba(255, 243, 205, 0);
+        background-color: transparent;
     }
 }
 
