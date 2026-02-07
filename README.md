@@ -16,6 +16,9 @@ Transform your Redmine experience with a clean, hierarchical view of your Projec
 - **📄 Wiki Tree**: Visual tree structure for all wiki pages.
 - **¶ Wiki Headings**: Automatic Table of Contents (h1, h2, etc.) for the current page.
 - **⚡ Collapsible Sidebar**: Toggle the sidebar to maximize your workspace.
+- **🚫 Hide Breadcrumbs**: Optional setting to hide the Redmine breadcrumb trail for a cleaner look.
+- **📌 Sticky Top Menu**: Optional setting to keep the main Redmine menu fixed at the top while scrolling.
+- **🔄 Cascading Activation**: Automatically enables/disables the subnavigation module in subprojects when changed in a parent project (in 'Full Hierarchy' mode).
 - **🎨 Modern Design**: Clean CSS that integrates seamlessly with modern Redmine themes.
 - **🌍 Localized**: Available in English and German.
 - **📱 Responsive**: Optimized for various screen sizes.
@@ -58,9 +61,16 @@ Navigate to **Administration > Plugins > Subnavigation > Configure**.
 
 | Option | Description |
 |:---|:---|
-| **Disabled** | Plugin is inactive. |
-| **Wiki & Headings** | Sidebar shows Wiki pages and headings only. |
-| **Full Hierarchy** | Sidebar shows Projects, Wiki pages, and headings. |
+| **Sidebar Mode** | |
+| *Disabled* | Plugin is inactive. |
+| *Wiki & Headings* | Sidebar shows Wiki pages and headings only. |
+| *Full Hierarchy* | Sidebar shows Projects, Wiki pages, and headings. **Enables cascading module activation.** |
+| **Header Max Depth** | Maximum depth of headings (h1, h2, h3) to show in the TOC. |
+| **Hide Breadcrumb** | Hides the default Redmine breadcrumb trail (e.g., `Project > Wiki > Page`) for a cleaner header. |
+| **Sticky Top Menu** | Fixes the black top menu bar to the top of the screen when scrolling. |
+
+> [!NOTE]
+> **Cascading Activation**: When "Full Hierarchy" (`project_wiki`) mode is enabled, enabling or disabling the **Subnavigation** module in a project's settings will automatically apply the same change to all its subprojects.
 
 ## 🤝 Contributing
 
