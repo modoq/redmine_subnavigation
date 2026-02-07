@@ -8,7 +8,9 @@ Redmine::Plugin.register :redmine_subnavigation do
 
   settings default: {
     'sidebar_mode' => 'wiki', # 'none', 'wiki', 'project_wiki'
-    'header_max_depth' => '3'
+    'header_max_depth' => '3',
+    'hide_breadcrumb' => false,
+    'sticky_top_menu' => false
   }, partial: 'settings/subnav_settings'
 
   project_module :subnavigation do
@@ -18,4 +20,11 @@ end
 
 require_relative 'lib/redmine_subnavigation/wiki_sidebar_helper'
 require_relative 'lib/redmine_subnavigation/hooks'
+require_relative 'lib/redmine_subnavigation/patches/enabled_module_patch'
+require_relative 'lib/redmine_subnavigation/patches/project_patch'
+
+ActiveSupport::Reloader.to_prepare do
+  EnabledModule.send(:include, RedmineSubnavigation::Patches::EnabledModulePatch) unless EnabledModule.included_modules.include?(RedmineSubnavigation::Patches::EnabledModulePatch)
+  Project.send(:include, RedmineSubnavigation::Patches::ProjectPatch) unless Project.included_modules.include?(RedmineSubnavigation::Patches::ProjectPatch)
+end
 

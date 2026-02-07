@@ -5,3 +5,5 @@ en:
   label_subnav_wiki: "Wiki & Headings"
   label_subnav_project_wiki: "Full Hierarchy (Projects, Wiki & Headings)"
   label_subnav_header_max_depth: "Max Headings Depth"
+  label_subnav_hide_breadcrumb: "Hide Breadcrumb Trail"
+  label_subnav_sticky_top_menu: "Sticky Top Menu"

@@ -138,20 +138,61 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!anchor && !activeLink) return;
 
         let target = null;
+        // STRATEGY: Find target by multiple means, prioritizing exactness then fuzziness
 
-        // Try exact ID match first
-        if (anchor) target = document.getElementById(anchor);
+        // 1. Try Anchor/ID (Case-Insensitive)
+        // Redmine anchors might be Mixed-Case ("My-Header") while we have "my-header".
+        if (anchor) {
+            // A. Exact Name (Textile <a name="...">)
+            target = document.querySelector(`a[name="${anchor}"]`);
 
-        // Try named anchor <a name="foo"> which Redmine uses often
-        if (!target && anchor) target = document.querySelector(`a[name="${anchor}"]`);
+            // B. Exact ID
+            if (!target) target = document.getElementById(anchor);
 
-        // Robust Fallback: Search by Text Content if we know it (from data-header-text)
+            // C. Case-Insensitive Name Match
+            if (!target) {
+                const allAnchors = document.getElementsByTagName('a');
+                for (let a of allAnchors) {
+                    if (a.name && a.name.toLowerCase() === anchor.toLowerCase()) {
+                        target = a;
+                        break;
+                    }
+                }
+            }
+
+            // D. Case-Insensitive ID Match (scan all relevant elements)
+            if (!target) {
+                // Optimization: Only scan wiki content or headers to avoid full DOM scan if possible, 
+                // but ID should be unique enough.
+                const candidates = document.querySelectorAll('.wiki *[id], .wiki a[name]');
+                for (let el of candidates) {
+                    const id = el.id || el.getAttribute('name');
+                    if (id && id.toLowerCase() === anchor.toLowerCase()) {
+                        target = el;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // 2. Fallback: Search by Text Content (Fuzzy Matching)
+        // Only if no target found by ID/Anchor
         if (!target && activeLink) {
             const headerText = activeLink.getAttribute('data-header-text');
             if (headerText) {
+                // Normalize function: strip punctuation, lowercase, squish whitespace
+                const normalize = (str) => str.replace(/[^\w\s\u00C0-\u017F]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
+                const searchNorm = normalize(headerText);
+
                 const headers = document.querySelectorAll('.wiki h1, .wiki h2, .wiki h3, .wiki h4, .wiki h5');
                 for (let h of headers) {
+                    // Try exact content first
                     if (h.textContent.trim() === headerText) {
+                        target = h;
+                        break;
+                    }
+                    // Try normalized match
+                    if (normalize(h.textContent) === searchNorm) {
                         target = h;
                         break;
                     }
@@ -161,10 +202,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (target) {
             // If target is <a> (anchor), the visual header is usually the next sibling
-            if (target.tagName === 'A') target = target.nextElementSibling;
+            if (target.tagName === 'A') {
+                // Sometimes Redmine puts <a> inside the h2 (Markdown) or before (Textile)
+                // If <a> is empty and has a next sibling header, target that
+                if (target.nextElementSibling && /^H[1-6]$/.test(target.nextElementSibling.tagName)) {
+                    target = target.nextElementSibling;
+                } else if (target.parentElement && /^H[1-6]$/.test(target.parentElement.tagName)) {
+                    target = target.parentElement;
+                }
+            }
 
-            if (target && /^H[1-6]$/.test(target.tagName)) {
+            if (target) {
                 target.classList.add('wiki-header-highlight-target');
+                // Use scrollIntoView with some margin/offset support if possible, or standard center
                 target.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         }
@@ -249,4 +299,53 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     }
+
+    // 7. Dynamic Theme Style Extraction
+    function applyDynamicThemeStyles() {
+        let foundRule = null;
+        // Search matching rules in all stylesheets
+        try {
+            for (const sheet of document.styleSheets) {
+                try {
+                    const rules = sheet.cssRules || sheet.rules;
+                    if (!rules) continue;
+
+                    for (const rule of rules) {
+                        if (rule.selectorText &&
+                            rule.selectorText.includes('#project-jump') &&
+                            rule.selectorText.includes('.drdn-items') &&
+                            rule.selectorText.includes('a:hover')) {
+                            foundRule = rule;
+                            break;
+                        }
+                    }
+                } catch (e) {
+                    // Access to cross-origin stylesheets might fail
+                }
+                if (foundRule) break;
+            }
+        } catch (e) {
+            console.warn("[Subnav] Error iterating stylesheets:", e);
+        }
+
+        if (foundRule) {
+            const bg = foundRule.style.backgroundColor;
+            const col = foundRule.style.color;
+            const dec = foundRule.style.textDecoration; // e.g. underline
+
+            // We update the CSS variables on :root (html) so they cascade
+            if (bg && bg !== '' && bg !== 'initial' && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)') {
+                document.documentElement.style.setProperty('--subnav-active-bg', bg);
+            }
+            if (col && col !== '' && col !== 'initial') {
+                document.documentElement.style.setProperty('--subnav-active-text', col);
+            }
+        } else {
+            // Fallback or specific override for standard Redmine (white bg, blue link)
+            // if no rule found, we keep default variables from CSS
+        }
+    }
+
+    // Run extraction
+    applyDynamicThemeStyles();
 });

@@ -58,6 +58,8 @@ module RedmineSubnavigation
         <script>
           document.body.classList.add('has-mini-wiki-sidebar');
           document.body.classList.add('mini-sidebar-mode-#{mode}');
+          #{'document.body.classList.add("mini-sidebar-hide-breadcrumb");' if Setting.plugin_redmine_subnavigation['hide_breadcrumb']}
+          #{'document.body.classList.add("mini-sidebar-sticky-top-menu");' if Setting.plugin_redmine_subnavigation['sticky_top_menu']}
         </script>
       HTML
       output.join("\n").html_safe

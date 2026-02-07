@@ -13,3 +13,13 @@
   <%= select_tag 'settings[header_max_depth]', 
       options_for_select((1..5).to_a, @settings['header_max_depth'].to_i) %>
 </p>
+
+<p>
+  <label><%= I18n.t(:label_subnav_hide_breadcrumb) %></label>
+  <%= check_box_tag 'settings[hide_breadcrumb]', 1, @settings['hide_breadcrumb'] %>
+</p>
+
+<p>
+  <label><%= I18n.t(:label_subnav_sticky_top_menu) %></label>
+  <%= check_box_tag 'settings[sticky_top_menu]', 1, @settings['sticky_top_menu'] %>
+</p>

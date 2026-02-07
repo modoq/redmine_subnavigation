@@ -12,7 +12,7 @@
     --subnav-icon: #999;
     --subnav-folder: #666;
     --subnav-resizer-hover: #007bff;
-    --subnav-z-index: 100;
+    --subnav-z-index: 15;
 }
 
 /* Dark Mode Support (Basic) */
@@ -140,11 +140,10 @@ body.has-mini-wiki-sidebar #footer {
     min-width: var(--subnav-width);
     background-color: var(--subnav-bg);
     border-right: 1px solid var(--subnav-border);
-    padding: 40px 15px 15px 15px;
+    padding: 26px 15px 15px 15px;
     box-sizing: border-box;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    height: auto;
-    /* Was 100%, but needs auto/fit-content for sticky to work if parent is tall */
+    height: 100vh;
     align-self: start;
     /* Ensure it doesn't stretch to full grid height */
     min-height: 0;
@@ -234,13 +233,30 @@ body.mini-wiki-sidebar-closed .mini-wiki-sidebar-toggle {
     border-radius: 3px;
 }
 
-/* Override styling for different modes not really needed if sticky works */
+/* Override styling for different modes */
+
+/* Wiki Mode: Toggle scrolls with content until top, then sticks (relies on sidebar sticky) */
 body.mini-wiki-sidebar-closed.mini-sidebar-mode-wiki .mini-wiki-sidebar-toggle {
-    /* If header is tall, sticky ensures it stays put relative to grid area */
-    /* top: 120px; <-- Remove hardcoded offset, rely on sticky */
-    color: #333;
-    background: rgba(255, 255, 255, 0.8);
-    border: 1px solid #ddd;
+    position: absolute !important;
+    /* Optional: Slight visual tweak if needed, user said "ganz links am rand" -> left: 0 is correct */
+    /* Update: User requested 15px right and narrower */
+    /* User requested specific tweaks */
+    position: absolute !important;
+    top: 0 !important;
+    left: 15px !important;
+    /* Kept due to context, user said "margin-left: -16px" on base? Let's assume user wants this override */
+    color: #999;
+    background: transparent !important;
+    border: none !important;
+    width: 20px !important;
+
+    /* User supplied: */
+    padding-right: 0px !important;
+    padding-top: 0px !important;
+    padding-bottom: 0px !important;
+    padding-left: 2px !important;
+    margin-left: -16px !important;
+    margin-top: 6px !important;
 }
 
 /* Hover State */
@@ -260,8 +276,9 @@ body.mini-wiki-sidebar-closed .mini-wiki-sidebar-toggle:hover {
 
 body.mini-wiki-sidebar-closed .mini-wiki-sidebar-toggle::before {
     content: '☰';
-    font-size: 18px;
+    font-size: 20px;
     font-weight: normal;
+    margin-left: 18px;
 }
 
 /* Content Styling */
@@ -286,7 +303,8 @@ a.wiki-page-link {
     color: var(--subnav-text);
     text-decoration: none;
     border-radius: 4px;
-    font-weight: 500;
+    font-weight: normal;
+    font-size: 0.9rem;
     line-height: 1.4;
     flex: 1;
     min-width: 0;
@@ -304,13 +322,13 @@ a.wiki-page-link:hover {
 a.wiki-page-link.active {
     background-color: var(--subnav-active-bg);
     color: var(--subnav-active-text);
-    font-weight: bold;
+    font-weight: normal;
     text-decoration: none;
 }
 
 /* Type Icons */
 a.wiki-page-link.type-project {
-    font-weight: 600;
+    font-weight: normal;
 }
 
 a.wiki-page-link.type-project::before {
@@ -372,6 +390,7 @@ body.mini-wiki-sidebar-closed.mini-sidebar-mode-project_wiki #header {
 a.wiki-header-link {
     color: #666;
     font-size: 0.9rem;
+    font-weight: normal;
     padding: 2px 4px 2px 18px;
     position: relative;
     text-decoration: none;
@@ -388,7 +407,7 @@ a.wiki-header-link {
 /* Indentation for Header Levels */
 a.wiki-header-link.wiki-header-h1 {
     padding-left: 12px;
-    font-weight: 600;
+    font-weight: normal;
 }
 
 a.wiki-header-link.wiki-header-h1::before {
@@ -406,7 +425,7 @@ a.wiki-header-link.wiki-header-h2::before {
 a.wiki-header-link.wiki-header-h3 {
     padding-left: 28px;
     color: #777;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
 }
 
 a.wiki-header-link.wiki-header-h3::before {
@@ -416,7 +435,7 @@ a.wiki-header-link.wiki-header-h3::before {
 a.wiki-header-link.wiki-header-h4 {
     padding-left: 36px;
     color: #888;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
 }
 
 a.wiki-header-link.wiki-header-h4::before {
@@ -426,7 +445,7 @@ a.wiki-header-link.wiki-header-h4::before {
 a.wiki-header-link.wiki-header-h5 {
     padding-left: 44px;
     color: #999;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
 }
 
 a.wiki-header-link.wiki-header-h5::before {
@@ -525,10 +544,17 @@ a.wiki-header-link::before {
 a.wiki-header-link.active {
     color: var(--subnav-active-text) !important;
     background-color: var(--subnav-active-bg);
-    border-radius: 0 4px 4px 0;
-    border-left: 3px solid #007bff;
-    /* Visual Indicator */
+    border-radius: 4px;
+    /* Removed hardcoded border to match project-jump style more closely. 
+       If specific border needed it should likely come from theme too or be subtle. */
+    border-left: 3px solid var(--subnav-active-text);
+    /* Visual Indicator using the active text color (often high contrast) */
     font-weight: 600;
+}
+
+a.wiki-header-link.active::before {
+    color: var(--subnav-active-text) !important;
+    opacity: 1;
 }
 
 /* Content Header Highlight Animation */
@@ -552,4 +578,34 @@ a.wiki-header-link.active {
 
 .wiki-header-highlight-target {
     animation: target-fade 2s ease-out;
+}
+
+/* Feature: Hide Breadcrumb */
+body.mini-sidebar-hide-breadcrumb #breadcrumb {
+    display: none !important;
+}
+
+/* Feature: Sticky Top Menu */
+body.mini-sidebar-sticky-top-menu #top-menu {
+    position: sticky;
+    top: 0;
+    z-index: 25;
+    /* Higher than subnav z-index if needed, or sidebar respects it */
+    width: 100%;
+}
+
+/* Ensure sidebar respects sticky top menu if needed, though usually sidebar is below or independent. 
+   If Sidebar is sticky top:0, it might overlap top-menu if top-menu is also sticky top:0.
+   Usually top-menu is ~20-30px height. 
+   If both are sticky, we might want sidebar to be top: [top-menu-height].
+   But let's see how it behaves first. Standard Redmine top-menu is z-index high.
+*/
+body.mini-sidebar-sticky-top-menu.has-mini-wiki-sidebar #mini-wiki-sidebar {
+    /* If top-menu is sticky, sidebar should probably sit below it IF it overlaps.
+       However, sidebar is "side" grid area.
+       If top-menu is "top" area.
+       Let's assume grid handles layout, but sticky needs coordinate.
+    */
+    top: 0;
+    /* Keep sidebar sticky at top. If overlapping occurs, user might report. */
 }
