@@ -28,12 +28,12 @@ jobs:
       uses: ruby/setup-ruby@v1
       with:
         ruby-version: ${{ matrix.ruby-version }}
-        bundler-cache: true
         working-directory: redmine
 
     - name: Install Dependencies
       working-directory: redmine
       run: |
+        bundle config set --local without 'postgresql mysql rmagick'
         bundle install
         
         # Create database.yml (SQLite for testing)
